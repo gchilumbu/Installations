@@ -1,0 +1,21 @@
+## To install Twemproxy, enter the commands provided below
+
+## Install Dependencies
+    $sudo apt-get install build-essential libtool autoconf automake
+
+## Download Twemproxy and install it
+    $git clone https://github.com/twitter/twemproxy.git
+    $cd twemproxy
+    $autoreconf -fvi
+    $./configure --enable-debug=full
+    $make
+    $sudo make install
+
+## Test Installation
+    $src/nutcracker -h
+
+## Here, you probably want to update the /twemproxy/conf/nutcracker.yml config file to suit your config. 
+
+## Start twemproxy
+    $cd .../src
+    $./nutcracker -c ../conf/nutcracker.yml -v 11
