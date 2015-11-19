@@ -1,0 +1,19 @@
+Here, we will try to install Consul as a standalone 
+
+## First, create some Consul directories that we will use later
+
+    $sudo mkdir /etc/consul/consul.d
+    
+## Download and install Consul
+#  download the latest version from https://www.consul.io/downloads.html
+
+    $wget https://dl.bintray.com/mitchellh/consul/0.5.2_linux_amd64.zip
+    $unzip 0.5.2_linux_amd64.zip -d /usr/local/bin/
+    
+## Test if its installed
+
+    $consul
+
+## Start Consul by running it as a server
+
+    $consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul 
