@@ -1,0 +1,65 @@
+How to Install and setup Cassandra
+
+1. Add the java PPA repository
+  
+   $sudo add-apt-repository ppa:webupd8team/java
+
+2. Update package lists
+
+   $sudo apt-get update
+  
+3. Install Oracle java 8
+
+    $sudo apt-get install oracle-java8-installer
+   
+*Note: Change the number 8 to 6 (or 7) in the code to install Java 6 (or 7).
+
+4. Set the default java
+  
+    $sudo apt-get install oracle-java8-set-default
+
+5. Test your installation
+
+   $java -version 
+
+It should display something like the following if everything went well
+
+java version "1.8.0_66"
+Java(TM) SE Runtime Environment (build 1.8.0_66-b17)
+Java HotSpot(TM) 64-Bit Server VM (build 25.66-b17, mixed mode)	
+
+6. Set java HOME
+
+    $sudo miv /etc/profile.d/oraclejdk.sh
+
+then paste the following config:
+
+export J2SDKDIR=/usr/lib/jvm/java-8-oracle
+export J2REDIR=/usr/lib/jvm/java-8-oracle/jre
+export PATH=$PATH:/usr/lib/jvm/java-8-oracle/bin:/usr/lib/jvm/java-8-oracle/db/bin:/usr/lib/jvm/java-8-oracle/jre/bin
+export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+export DERBY_HOME=/usr/lib/jvm/java-8-oracle/db
+
+7. Log out the system and log back in. Then run the following command:
+
+   $echo $JAVA_HOME
+
+And you should see the following line:
+
+/usr/lib/jvm/java-8-oracle
+
+8. Install Cassandra and dependencies
+
+  $echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
+  $curl -L http://debian.datastax.com/debian/repo_key | sudo apt-key add -
+  $sudo apt-get install mysql-common  libmysqlclient18
+  $sudo apt-get install libmysqlclient-dev
+
+  $sudo apt-get install dsc20=2.0.11-1 cassandra=2.0.11
+  $sudo updatedb
+  $dpkg -L cassandra
+
+# login into the cassandra client interface:
+
+   $cqlsh
+     
