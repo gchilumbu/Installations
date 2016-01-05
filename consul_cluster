@@ -1,0 +1,204 @@
+Introduction:
+We are going to assume that the consul cluster will have 3 servers, and 3 mysql clients which are part of a Percona XctraDB cluster. These mysql nodes do not have to be part of the cluster, and if they are, they can be part of any db cluster including mariadb galera cluster or mysql cluster - it really does not matter.
+
+Architecture:
+Consul servers:
+consul-s1: 192.168.2.100
+consul-s2: 192.168.2.101
+consul-s3: 192.168.2.102
+
+Consul clients:
+
+db-pxc-1: 192.168.2.205
+db-pxc-2: 192.168.2.206
+db-pxc-3: 192.168.2.207
+
+Step1. Install unzip:
+  $sudo apt-get update
+  $sudo apt-get install unzip
+
+Step. Install Consul on all cluster nodes
+  $cd /usr/local/bin
+  $sudo wget https://releases.hashicorp.com/consul/0.6.0/consul_0.6.0_linux_amd64.zip
+  $sudo unzip consul_0.6.0_linux_amd64.zip
+  $sudo rm consul_0.6.0_linux_amd64.zip
+#Note - you can download the latest consul from https://www.consul.io/downloads
+
+Step3. Add consul user
+  $sudo adduser consul
+#Note - for password when prompted, just use consul as password
+
+Step4. Create some useful directories
+  $sudo mkdir -p /etc/consul.d/scripts
+  $sudo mkdir /var/consul
+  $sudo chown consul:consul -R /var/consul
+
+Step5. Setup the config.json file
+
+On the Servers, create a config file /etc/consul.d/config.json and add the following config:
+
+  {
+    "bootstrap_expect": 3,
+    "client_addr": "0.0.0.0",
+    "datacenter": "chicago",
+    "data_dir": "/var/consul",
+    "domain": "consul",
+    "dns_config": {
+        "enable_truncate": true,
+        "only_passing": true
+    },
+    "enable_syslog": true,
+    "encrypt": "fMW9OOeILH2yaiTZ3UKrvQ==",
+    "leave_on_terminate": true,
+    "log_level": "INFO",
+    "rejoin_after_leave": true,
+    "server": true,
+    "start_join": [
+        "192.168.2.100",
+        "192.168.2.101",
+        "192.168.2.102"
+    ],
+    "ui_dir": "/usr/local/share/consul/ui"
+}
+
+#Note - for encrypt, you can get the value by running the command below
+   $consul keygen
+
+Make sure that the generated key should be used on all other consul nodes (both servers and clients) as values for encrypt in this config file. Also make sure that you change the name of the data center appropriately and also the IP address under the "start_join".
+
+On the clients, create a config file /etc/consul.d/config.json and add the following config just like we did in the previous config but with a bit modifications:
+
+{
+    "client_addr": "0.0.0.0",
+    "datacenter": "chicago",
+    "data_dir": "/var/consul",
+    "enable_syslog": true,
+    "encrypt": "fMW9OOeILH2yaiTZ3UKrvQ==",
+    "leave_on_terminate": true,
+    "log_level": "INFO",
+    "rejoin_after_leave": true,
+    "server": false,
+    "start_join": [
+        "192.168.2.100",
+        "192.168.2.101",
+        "192.168.2.102"
+    ]
+}
+Step 6. Download the Web UI.
+You can perform this step on one of the consul servers, or on all three consul servers. Here, i will just perform this on one of the servers (192.168.2.205)
+
+create some consul dir using the following commads:
+
+  $sudo mkdir -p /usr/local/share/consul/ui
+  $cd /usr/local/share/consul/ui
+  $sudo wget https://releases.hashicorp.com/consul/0.6.0/consul_0.6.0_web_ui.zip
+  $sudo unzip consul_0.6.0_web_ui.zip
+  $sudo rm consul_0.6.0_web_ui.zip
+  $sudo chown consul:consul -R /usr/local/share/consul/
+
+#Note - make sure to download the latest version of the web ui form the same download page where we downloaded the consul servers
+
+Step 7. Other config files for the Consul clients
+
+On all client nodes (db-pxc-1, dbp-pxc-2, and db-pxc-3), create the following config files:
+
+Our first config file will be for the mysql services and they will look the same on all client nodes
+
+$sudo vim /etc/consul.d/services.json
+
+{
+    "services": [
+        {
+            "name": "db-pxc",
+            "tags": [
+                "master"
+            ],
+            "port": 3306,
+            "checks": [
+                {
+                    "script": "/etc/consul.d/scripts/mysql.pl",
+                    "interval": "5s"
+                }
+            ]
+        }
+    ]
+}
+
+The second config file is a perl script that i wrote to to perform health checks on the mysqld
+
+$sudo vim /etc/consul.d/scripts/mysql.pl
+
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+
+use DBI;
+use IO::File;
+
+INIT {
+    my $now = localtime();
+    print "$now\n";
+
+    my $fh = IO::File->new('/Proj/authentiction.txt') or croak $!;
+    my $username = $fh->getline;
+    my $password = $fh->getline;
+    $fh->close;
+
+    chomp $password;
+    chomp $username;
+
+    my $ip = $ARGV[0];
+
+    my $dbh = DBI->connect("dbi:mysql:database=;host=${ip}", $username, $password, {mysql_connect_timeout => 1});
+    if (!defined $dbh) {
+        print "Cannot connect to mysql.";
+        exit -1;
+    }
+
+    if ( $dbh->do("SELECT 1") ) {
+        print "Mysql is running.";
+    }
+    else {
+        print "Select 1 Error.";
+        exit -1;
+        # execute "SELECT 1" error, return exit -1 for instance
+    }
+
+    $dbh->disconnect;
+}
+
+Then create a file /Proj/authentication.txt store the username and password. For example, if your mysql username is consul, and your  passord is secret, then add the following inside this file:
+
+  $sudo mkdir dir /Proj
+  $sudo vim /Proj/authentication.txt
+
+Add your mysql username and password  in the file once opne
+
+  consul
+  secret
+
+
+Step 8. On all consul nodes (both servers and clients), create config file /etc/init/consul.conf with the following config:
+
+    description "Consul client process"
+
+    start on (local-filesystems and net-device-up IFACE=eth0)
+    stop on runlevel [!12345]
+
+    respawn
+
+    setuid consul
+    setgid consul
+
+    exec consul agent -config-dir /etc/consul.d/
+
+Step 9. Start the consul nodes one by one, starting with the consul servers
+
+    $sudo start consul
+
+Sep 10. Verify that all consul nodes are up and running
+
+    $consul members
+
+If everything went fine, this command should list all the servers and clinet nodes as "alive"
