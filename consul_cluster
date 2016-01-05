@@ -202,3 +202,157 @@ Sep 10. Verify that all consul nodes are up and running
     $consul members
 
 If everything went fine, this command should list all the servers and clinet nodes as "alive"
+
+
+If we wanted to add services and checks for a redis cluster with the architecture shown below, 
+we have to do all the steps we have demonstrated above and just update the config files 
+appropriately. Otherwise the file structure and the installation of software is the same:
+
+Master Instances
+redis-1-1 192.168.1.150
+redis-2-1 192.168.1.151
+redis-3-1 192.168.1.152
+
+Slave Instances
+redis-1-2 192.168.1.154    #slave of redis-1-1
+redis-2-2 192.168.1.155    #slave of redis-2-1
+redis-3-2 192.168.1.156    #slave of redis-3-1
+
+On all the redis client nodes, create a JSOn file /etc/consul.d/config.json with the following config:
+
+{
+    "advertise_addr": "192.168.1.150",
+    "client_addr": "0.0.0.0",
+    "datacenter": "chicago",
+    "data_dir": "/var/consul",
+    "enable_syslog": true,
+    "encrypt": "fMW9OOeILH2yaiTZ3UKrvQ==",
+    "leave_on_terminate": true,
+    "log_level": "INFO",
+    "rejoin_after_leave": true,
+    "server": false,
+    "start_join": [
+        "192.168.2.100",
+        "192.168.2.101",
+        "192.168.2.102"
+    ]
+}
+
+#Note - change the IP on advertise_addr appropriately to match your local IP on each redis instance. The encrypt value
+should be the same on all nodes that are part of this consul cluster. The start_join Ips are those of the consul servers.
+
+The /etc/consul.d/services.json file will look like this on all redis instances:
+
+   {
+    "services": [
+        {
+            "name": "redis",
+            "port": 6379,
+            "checks": [
+                {
+                    "script": "/etc/consul.d/scripts/redis.sh",
+                    "interval": "5s"
+                }
+            ],
+            "enableTagOverride": true
+        }
+    ]
+}
+
+Create a new redis basj script /etc/consul.d/scripts/redis.sh with the following config:
+
+  #!/bin/bash
+
+nc -z 127.0.0.1 6379
+echo `date`
+if [ "$?" -ne 0 ]; then
+    echo "Cannot connect to redis."
+    exit 2
+else
+    C=$(redis-cli -p 6379 -h 127.0.0.1 info | grep "cluster_enabled:1");
+    if [[ "$C" != *"cluster_enabled:1"* ]]; then
+        echo "Redis is not cluster enabled."
+        exit 2
+    else
+        M=$(redis-cli -p 6379 -h 127.0.0.1 info | grep role);
+        L=$(redis-cli -p 6379 -h 127.0.0.1 info | grep "loading_start_time");
+        if [[ "$M" != *"role:master"* ]]; then
+            curl -s --upload-file /etc/consul.d/scripts/slave.json http://127.0.0.1:8500/v1/agent/service/register
+            echo "Redis is in slave mode."
+            exit 0
+        elif [[ -n "$L" ]]; then
+            echo "Redis doesn't join into cluster yet."
+            exit 1
+        else
+            echo "Redis is in master mode."
+            curl -s --upload-file /etc/consul.d/scripts/master.json http://127.0.0.1:8500/v1/agent/service/register
+            exit 0
+        fi
+    fi
+fi
+
+
+Create a json file /etc/consul.d/scripts/master.json with the following config file:
+
+  {
+    "name": "redis",
+    "tags": [
+        "master"
+    ],
+    "port": 6379,
+    "checks": [
+        {
+            "script": "/etc/consul.d/scripts/redis.sh",
+            "interval": "5s"
+        }
+    ],
+    "enableTagOverride": true
+}
+
+#Note - on all the Redis master instances, make sure that the tags has the value of "master" as above.
+For all the Redis slave instances, make the tags value "slave" as shown in config below. The master.sh above and
+and the slave.json file below will be used to ensure that consul is aware of changes between master and slave nodes 
+when a failover takes place, and allow consul to handle DNS calls to the Redis instances based on master instances only.
+This is important if you want all your redis slave instances to be read-only.
+
+Create a json file /etc/consul.d/scripts/slave.json with the following config file:
+
+  {
+    "name": "redis-general",
+    "tags": [
+        "slave"
+    ],
+    "port": 6379,
+    "checks": [
+        {
+            "script": "/etc/consul.d/scripts/redis.sh",
+            "interval": "5s"
+        }
+    ],
+    "enableTagOverride": true
+}
+
+Lastly, create the start script /etc/init/consul.conf and add the following config:
+
+description "Consul client process"
+
+start on (local-filesystems and net-device-up IFACE=eth0)
+stop on runlevel [!12345]
+
+respawn
+
+setuid consul
+setgid consul
+
+exec consul agent -config-dir /etc/consul.d/ 
+
+The you can start the redis instances the same way we started the mysql instances:
+
+   $sudo start consul
+   
+That is all there is to it. 
+
+I would recommend reading the consul documentation to have a better understanding of consul and how to maximize its use.
+
+
+
