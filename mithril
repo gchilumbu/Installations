@@ -1,0 +1,19 @@
+Mithril js
+
+Installation:
+
+$sudo apt-get install npm
+$sudo apt-get install nodejs-legacy
+$npm i -g http-server
+$git clone https://github.com/llambda/mithril-modal.git
+$cd mithril-modal
+$npm i
+$npm run watch
+$hs
+$open http://localhost:3000/demo.html
+
+
+
+References:
+https://medium.com/@l1ambda/mithril-vs-angular-vs-react-d0d659c24bae#.terlw3krc
+https://github.com/llambda/mithril-modal
