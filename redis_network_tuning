@@ -1,0 +1,22 @@
+Run the following commands as root
+
+echo 5 > /proc/sys/net/ipv4/tcp_fin_timeout 
+echo "32768 65535" > /proc/sys/net/ipv4/ip_local_port_range
+echo 1 > /proc/sys/net/ipv4/tcp_tw_recycle
+echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse
+sysctl -w net.core.rmem_max=8388608 #default 212992
+sysctl -w net.core.wmem_max=8388608 #default 212992
+sysctl -w net.core.rmem_default=65536 #default 212992
+sysctl -w net.core.wmem_default=65536 #default 212992
+sysctl -w net.ipv4.tcp_rmem='4096 87380 8388608’ #4096 87380 6291456
+sysctl -w net.ipv4.tcp_wmem='4096 65536 8388608’ #4096 16384 4194304
+sysctl -w net.ipv4.tcp_mem='8388608 8388608 8388608’ #1542459 2056612 3084918
+sysctl -w net.ipv4.route.flush=1
+Ofcourse these settings have not been made permanent until the test is done and improvement has been noticed.
+
+REFERENCES:
+​http://shokunin.co/blog/2014/11/11/operational_redis.html
+​http://www.cyberciti.biz/faq/linux-tcp-tuning/
+​https://wwwx.cs.unc.edu/~sparkst/howto/network_tuning.php
+​http://kaivanov.blogspot.tw/2010/09/linux-tcp-tuning.html
+​http://www.outsystems.com/forums/discussion/6956/how-to-tune-the-tcp-ip-stack-for-high-volume-of-web-requests/
