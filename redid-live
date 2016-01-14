@@ -1,0 +1,11 @@
+sudo apt-get install python-setuptools 
+sudo easy_install pip 
+sudo pip install tornado
+pip install redis
+pip install python-dateutil
+pip install argparse
+sudo apt-get install python2.7-dev
+sudo apt-get install python-pip
+
+#Download RedLive
+git clone https://github.com/kumarnitin/RedisLive.git
