@@ -12,7 +12,9 @@ sysctl -w net.ipv4.tcp_rmem='4096 87380 8388608’ #4096 87380 6291456
 sysctl -w net.ipv4.tcp_wmem='4096 65536 8388608’ #4096 16384 4194304
 sysctl -w net.ipv4.tcp_mem='8388608 8388608 8388608’ #1542459 2056612 3084918
 sysctl -w net.ipv4.route.flush=1
-Ofcourse these settings have not been made permanent until the test is done and improvement has been noticed.
+echo never > /sys/kernel/mm/transparent_hugepage/enabled
+
+*Note: these settings have not been made permanent until the test is done and improvement has been noticed.
 
 REFERENCES:
 ​http://shokunin.co/blog/2014/11/11/operational_redis.html
