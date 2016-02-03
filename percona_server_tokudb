@@ -1,0 +1,30 @@
+Install Percona Server with TokuDB
+
+Step1: Fetch the repository packages from Percona web:
+    wget https://repo.percona.com/apt/percona-release_0.1-3.$(lsb_release -sc)_all.deb
+
+Step2: Install the downloaded package with dpkg. To do that, run the following commands as root or with sudo:
+    dpkg -i percona-release_0.1-3.$(lsb_release -sc)_all.deb
+
+Step3: Upgrade local cache
+    sudo apt-get update
+
+Step4: Install the Percona server package
+    sudo apt-get install percona-server-server-5.6
+
+Step5: Then install libjemalloc1 which we’ll need to run the server with in order to enable TokuDB
+    sudo apt-get install libjemalloc1
+Here, i would also maybe install libaio1 and libaio-dev
+    apt-get install libaio1 libaio-dev
+
+Step6: Download and install TokuDB
+First, download TokuDB package from https://www.percona.com/downloads/Percona-Server-5.6/
+    wget https://www.percona.com/downloads/Percona-Server-5.6/Percona-Server-5.6.28-76.1/binary/debian/trusty/x86_64/percona-server-tokudb-5.6_5.6.28-76.1-1.trusty_amd64.deb
+    sudo dpkg -i percona-server-tokudb-5.6_5.6.28-76.1-1.trusty_amd64.deb
+
+Step7: Stop mysql and start again with libjemalloc.so.1 enabled. You might need to find the location for libjemalloc.so.1
+    sudo service mysql stop
+    sudo LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.1 /etc/init.d/mysql start
+
+Step7: Enable TokuDB on the percona server
+    sudo ps_tokudb_admin --enable -uroot -psecret
