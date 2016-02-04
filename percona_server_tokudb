@@ -15,7 +15,7 @@ Step4: Install the Percona server package
 Step5: Then install libjemalloc1 which we’ll need to run the server with in order to enable TokuDB
     sudo apt-get install libjemalloc1
 Here, i would also maybe install libaio1 and libaio-dev
-    apt-get install libaio1 libaio-dev
+    sudo apt-get install libaio1 libaio-dev
 
 Step6: Download and install TokuDB
 First, download TokuDB package from https://www.percona.com/downloads/Percona-Server-5.6/
