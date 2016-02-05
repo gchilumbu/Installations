@@ -1,0 +1,25 @@
+ulimit open tables [1]
+
+sudo vim /etc/security/limits.conf
+
+Add the following at the bottom of the file:
+    * soft nofile 1024000
+    * hard nofile 1024000
+    * soft nproc 10240
+    * hard nproc 10240
+
+sudo vim /etc/security/limits.d/90-nproc.conf
+Add the following to the file:
+    * soft nofile 1024000
+    * hard nofile 1024000
+    * soft nproc 10240
+    * hard nproc 10240
+root soft nproc unlimited
+
+sudo vim /etc/mysql/my.cnf
+Add this line under mysqld & mysqld_safe and restart the mysql server. Later verify that the changes took place
+open_files_limit = 1024000
+
+REFERENCES
+[1]http://duntuk.com/how-raise-ulimit-open-files-and-mysql-openfileslimit
+[2] https://www.percona.com/blog/2010/08/23/innodb-memory-allocation-ulimit-and-opensuse/
