@@ -18,7 +18,25 @@ root soft nproc unlimited
 
 sudo vim /etc/mysql/my.cnf
 Add this line under mysqld & mysqld_safe and restart the mysql server. Later verify that the changes took place
-open_files_limit = 1024000
+    [mysqld]
+    open_files_limit = 1024000
+
+    [mysqld_safe]
+    open_files_limit = 1024000
+
+Restart mysqld
+    service mysqld restart
+    
+Verify the changes took effect
+   mysql>show global variables like 'open%';
+
+Next, you should reboot your server and repeat the mysql steps to make sure they are being loaded at bootup.
+
+   mysql -u root -p 
+   mysql>show global variables like 'open%';
+    
+    
+
 
 REFERENCES
 [1]http://duntuk.com/how-raise-ulimit-open-files-and-mysql-openfileslimit
