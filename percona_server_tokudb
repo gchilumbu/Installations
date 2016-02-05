@@ -28,3 +28,5 @@ Step7: Stop mysql and start again with libjemalloc.so.1 enabled. You might need 
 
 Step7: Enable TokuDB on the percona server
     sudo ps_tokudb_admin --enable -uroot -psecret
+    
+
