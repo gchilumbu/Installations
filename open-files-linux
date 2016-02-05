@@ -14,7 +14,7 @@ Add the following to the file:
     * hard nofile 1024000
     * soft nproc 10240
     * hard nproc 10240
-root soft nproc unlimited
+    root soft nproc unlimited
 
 sudo vim /etc/mysql/my.cnf
 Add this line under mysqld & mysqld_safe and restart the mysql server. Later verify that the changes took place
