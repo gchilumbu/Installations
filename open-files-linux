@@ -23,3 +23,4 @@ open_files_limit = 1024000
 REFERENCES
 [1]http://duntuk.com/how-raise-ulimit-open-files-and-mysql-openfileslimit
 [2] https://www.percona.com/blog/2010/08/23/innodb-memory-allocation-ulimit-and-opensuse/
+[3]http://duntuk.com/how-raise-ulimit-open-files-and-mysql-openfileslimit
