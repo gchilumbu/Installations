@@ -1,0 +1,22 @@
+Mac OS installation
+
+1. Download and Install Redis using homebrew
+   $brew install redis
+   $tar -xvf ~/Downloads/redis-x-y-z
+   $cd redis.x-y-z
+   $make test
+   $make
+   
+2. As root, move these 2 directories into your /usr/bin directory
+  $ sudo mv src/redis-server /usr/bin
+  $ sudo mv src/redis-cli /usr/bin
+
+3. Create the following folder and config file 
+  $ mkdir ~/.redis
+  $ touch ~/.redis/redis.conf
+  
+4. Start Redis
+   $redis-server &
+  
+REFERENCES
+http://jasdeep.ca/2012/05/installing-redis-on-mac-os-x/
