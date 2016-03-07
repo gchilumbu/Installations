@@ -168,6 +168,10 @@ INIT {
     $dbh->disconnect;
 }
 
+Make the /etc/consul.d/scripts/mysql.pl file executable by running the following command:
+
+$sudo chmod +x /etc/consul.d/scripts/mysql.pl
+
 Then create a file /Proj/authentication.txt store the username and password. For example, if your mysql username is consul, and your  passord is secret, then add the following inside this file:
 
   $sudo mkdir dir /Proj
