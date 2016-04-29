@@ -1,0 +1,30 @@
+sudo apt-get update
+sudo apt-get upgrade
+mkdir graphite
+cd graphite
+
+git clone https://github.com/graphite-project/graphite-web.git
+git clone https://github.com/graphite-project/carbon.git
+git clone https://github.com/graphite-project/whisper.git
+git clone https://github.com/graphite-project/ceres.git
+
+cd graphite-web/
+sudo python setup.py install
+cd ../
+
+cd carbon
+sudo python setup.py install
+cd ../
+
+cd whisper
+sudo python setup.py install
+cd ../
+
+cd ceres
+sudo python setup.py install
+
+cd /opt/graphite/conf
+sudo cp carbon.conf.example carbon.conf
+sudo cp storage-schemas.conf.example storage-schemas.conf
+
+$ /opt/graphite/bin/carbon-cache.py start
